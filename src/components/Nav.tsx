@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Panduan } from "./Panduan";
 
 export function Nav({ peran, email, admin }: { peran: "pengelola" | "investor"; email?: string; admin?: boolean }) {
   const links =
@@ -16,10 +17,13 @@ export function Nav({ peran, email, admin }: { peran: "pengelola" | "investor"; 
             <Link key={href} href={href} className="hover:underline">{label}</Link>
           ))}
         </nav>
-        <form action="/auth/keluar" method="post" className="ml-auto flex items-center gap-3 text-sm">
+        <div className="ml-auto flex items-center gap-3 text-sm">
+        <Panduan />
+        <form action="/auth/keluar" method="post" className="flex items-center gap-3">
           <span className="muted hidden sm:inline">{email}</span>
           <button className="btn-ghost">Keluar</button>
         </form>
+        </div>
       </div>
     </header>
   );
