@@ -169,3 +169,10 @@ export async function daftarkanEmailPeran(fd: FormData) {
   await supabase.from("profil").update({ peran: p, disetujui: true, minta_pengelola: false }).ilike("email", email);
   revalidatePath("/kelola", "layout");
 }
+
+export async function simpanTarif(fd: FormData) {
+  const { supabase } = await wajibAdmin();
+  const { error } = await supabase.from("pengaturan").upsert({ kunci: "tarif_kelola_harian", nilai: num(fd, "tarif"), diubah: new Date().toISOString() });
+  if (error) gagal("/kelola/biaya", error.message);
+  revalidatePath("/kelola", "layout");
+}

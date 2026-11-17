@@ -82,20 +82,28 @@ export default async function DetailKambing({ params, searchParams }: {
         </section>
 
         <section className="card space-y-3 lg:col-span-2">
-          <h2>Biaya dan bagi hasil</h2>
+          <h2>Bagi hasil</h2>
           <table className="tbl">
             <tbody>
-              <tr><td>Harga beli (modal)</td><td className="num">{rupiah(r.harga_beli)}</td></tr>
-              <tr><td>Biaya langsung (pakan, obat, lain)</td><td className="num">{rupiah(r.biaya_langsung)}</td></tr>
-              <tr><td>Biaya kesehatan</td><td className="num">{rupiah(r.biaya_kesehatan)}</td></tr>
-              <tr><td>Bagian biaya bersama</td><td className="num">{rupiah(r.biaya_bersama)}</td></tr>
-              <tr><td className="font-semibold">Total biaya</td><td className="num font-semibold">{rupiah(r.total_biaya)}</td></tr>
+              <tr><td>Harga beli (modal investor)</td><td className="num">{rupiah(r.harga_beli)}</td></tr>
               <tr><td>Harga jual</td><td className="num">{rupiah(r.harga_jual)}</td></tr>
-              <tr><td className="font-semibold">Keuntungan</td><td className="num font-semibold">{rupiah(r.keuntungan)}</td></tr>
+              <tr><td className="font-semibold">Keuntungan (jual − beli)</td><td className="num font-semibold">{rupiah(r.keuntungan)}</td></tr>
               <tr><td>Bagian investor ({Math.round(r.porsi_investor * 100)}%)</td><td className="num">{rupiah(r.bagian_investor)}</td></tr>
               <tr><td>Bagian pengelola ({100 - Math.round(r.porsi_investor * 100)}%)</td><td className="num">{rupiah(r.bagian_pengelola)}</td></tr>
             </tbody>
           </table>
+          <details className="text-sm">
+            <summary className="muted cursor-pointer">Pembukuan pengelola (biaya ditanggung pengelola, tidak mengurangi bagian investor)</summary>
+            <table className="tbl mt-2">
+              <tbody>
+                <tr><td>Biaya langsung (pakan, obat, kelola, lain)</td><td className="num">{rupiah(r.biaya_langsung)}</td></tr>
+                <tr><td>Biaya kesehatan</td><td className="num">{rupiah(r.biaya_kesehatan)}</td></tr>
+                <tr><td>Bagian biaya bersama</td><td className="num">{rupiah(r.biaya_bersama)}</td></tr>
+                <tr><td className="font-semibold">Total biaya pengelola</td><td className="num font-semibold">{rupiah(r.total_biaya)}</td></tr>
+                <tr><td>Laba bersih pengelola (bagian − biaya)</td><td className="num">{r.bagian_pengelola === null ? "-" : rupiah(Number(r.bagian_pengelola) - Number(r.total_biaya))}</td></tr>
+              </tbody>
+            </table>
+          </details>
           {jual ? (
             <p className="text-sm">Terjual {tgl(jual.tanggal)} ke {jual.pembeli ?? "-"} seharga {rupiah(jual.harga_jual)}. <Hapus tabel="penjualan" id={jual.id} kambingId={kid} /></p>
           ) : (
@@ -169,7 +177,7 @@ export default async function DetailKambing({ params, searchParams }: {
             <Field label="Keluhan / tindakan"><input className="input" name="keterangan" required placeholder="Vaksin, cacingan…" /></Field>
             <Field label="Obat"><input className="input" name="obat" /></Field>
             <Field label="Dosis"><input className="input" name="dosis" /></Field>
-            <Field label="Biaya (Rp)"><input className="input" name="biaya" inputMode="numeric" defaultValue="0" /></Field>
+            <Field label="Biaya obat/dokter (Rp, opsional)"><input className="input" name="biaya" inputMode="numeric" defaultValue="0" /></Field>
             <div className="flex items-end"><button className="btn w-full">Catat</button></div>
           </form>
           <table className="tbl">
@@ -188,13 +196,17 @@ export default async function DetailKambing({ params, searchParams }: {
       </div>
 
       <section className="card space-y-3">
-        <h2>Biaya khusus kambing ini</h2>
-        <p className="muted text-xs">Pakan untuk semua kambing dicatat di menu Biaya bersama, lalu dibagi rata otomatis.</p>
+        <h2>Biaya khusus kambing ini <span className="badge">opsional</span></h2>
+        <p className="muted text-xs">
+          Boleh diisi, boleh tidak. Biaya ditanggung pengelola, jadi tidak mengurangi bagian investor, dan investor tidak melihatnya.
+          Isi kalau ingin tahu laba bersih per kambing. Contoh: pakan konsentrat Rp50.000, obat cacing Rp15.000.
+          Pakan untuk semua kambing sekaligus lebih mudah dicatat di menu Biaya pengelola.
+        </p>
         <form action={catatBiaya} className="grid gap-2 sm:grid-cols-5">
           <input type="hidden" name="kambing_id" value={kid} />
           <Field label="Tanggal"><input className="input" type="date" name="tanggal" defaultValue={hariIni()} required /></Field>
           <Field label="Jenis">
-            <select className="input" name="jenis"><option value="pakan">Pakan</option><option value="obat">Obat</option><option value="lain">Lain-lain</option></select>
+            <select className="input" name="jenis"><option value="pakan">Pakan</option><option value="obat">Obat</option><option value="kelola">Jasa kelola</option><option value="lain">Lain-lain</option></select>
           </Field>
           <Field label="Jumlah (Rp)"><input className="input" name="jumlah" inputMode="numeric" required /></Field>
           <Field label="Keterangan"><input className="input" name="keterangan" /></Field>

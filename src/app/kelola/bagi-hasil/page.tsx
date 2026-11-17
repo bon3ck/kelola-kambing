@@ -16,7 +16,7 @@ export default async function BagiHasil({ searchParams }: { searchParams: Promis
   return (
     <>
       <h1>Bagi hasil</h1>
-      <p className="muted text-sm">Hak investor = modal + porsi keuntungan (Idul Adha 50%, resto/cafe 30%), dibagi sesuai besar modal kalau satu kambing patungan.</p>
+      <p className="muted text-sm">Keuntungan = harga jual − harga beli (semua biaya ditanggung pengelola). Hak investor = modal + porsi keuntungan (Idul Adha 50%, resto/cafe dan bongkaran 30%), dibagi sesuai besar modal kalau patungan.</p>
       <Pesan pesan={pesan} />
       <section className="card overflow-x-auto">
         <h2 className="mb-3">Kambing terjual</h2>

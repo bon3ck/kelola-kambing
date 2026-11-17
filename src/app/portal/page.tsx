@@ -63,9 +63,8 @@ export default async function Portal() {
                     <table className="tbl self-start">
                       <tbody>
                         <tr><td>Modal Anda</td><td className="num">{rupiah(m.modal)}</td></tr>
-                        <tr><td>Biaya pemeliharaan (seluruh kambing)</td><td className="num">{rupiah(k.total_biaya)}</td></tr>
                         <tr><td>Harga jual</td><td className="num">{k.harga_jual ? rupiah(k.harga_jual) : "belum terjual"}</td></tr>
-                        <tr><td>Keuntungan kambing</td><td className="num">{rupiah(k.keuntungan)}</td></tr>
+                        <tr><td>Keuntungan kambing (jual − beli)</td><td className="num">{rupiah(k.keuntungan)}</td></tr>
                         <tr><td>Bagian Anda ({Math.round(k.porsi_investor * 100)}%)</td><td className="num">{rupiah(m.bagian_keuntungan)}</td></tr>
                         <tr><td className="font-semibold">Total hak (modal + bagian)</td><td className="num font-semibold">{rupiah(m.total_hak)}</td></tr>
                         <tr><td>Sudah dibayar</td><td className="num">{rupiah(m.sudah_dibayar)}</td></tr>

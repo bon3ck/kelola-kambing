@@ -23,7 +23,7 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
       <section className="card overflow-x-auto">
         {rows.length === 0 ? <p className="muted text-sm">Belum ada kambing.</p> : (
           <table className="tbl">
-            <thead><tr><th>Kambing</th><th>Kelamin</th><th>Jalur</th><th>Status</th><th>Tgl beli</th><th className="num">Berat</th><th className="num">Modal</th><th className="num">Biaya</th><th className="num">Harga jual</th><th className="num">Keuntungan</th></tr></thead>
+            <thead><tr><th>Kambing</th><th>Kelamin</th><th>Jalur</th><th>Status</th><th>Tgl beli</th><th className="num">Berat</th><th className="num">Modal</th><th className="num">Harga jual</th><th className="num">Keuntungan</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
@@ -34,7 +34,6 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
                   <td>{tgl(r.tanggal_beli)}</td>
                   <td className="num">{kg(r.berat_terakhir)}</td>
                   <td className="num">{rupiah(r.harga_beli)}</td>
-                  <td className="num">{rupiah(r.total_biaya)}</td>
                   <td className="num">{rupiah(r.harga_jual)}</td>
                   <td className="num">{rupiah(r.keuntungan)}</td>
                 </tr>

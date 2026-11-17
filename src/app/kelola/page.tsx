@@ -12,6 +12,8 @@ export default async function Dashboard() {
   const sum = (a: RingkasanKambing[], f: (r: RingkasanKambing) => number | null) => a.reduce((s, r) => s + Number(f(r) ?? 0), 0);
   const { data: foto } = await supabase.from("kambing").select("id,foto_url");
   const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
+  const { data: t } = await supabase.from("pengaturan").select("nilai").eq("kunci", "tarif_kelola_harian").maybeSingle();
+  const tarif = t?.nilai;
   const { count: nInvestor } = await supabase.from("investor").select("*", { count: "exact", head: true });
 
   return (
@@ -21,7 +23,8 @@ export default async function Dashboard() {
         <Stat label="Kambing dipelihara" value={String(aktif.length)}
           sub={`${aktif.filter((r) => r.jalur === "idul_adha").length} Idul Adha · ${aktif.filter((r) => r.jalur === "resto").length} resto`} />
         <Stat label="Modal di kandang" value={rupiah(sum(aktif, (r) => r.harga_beli))} sub={`${nInvestor ?? 0} investor`} />
-        <Stat label="Biaya berjalan" value={rupiah(sum(aktif, (r) => r.total_biaya))} sub="kambing yang masih dipelihara" />
+        <Stat label="Biaya pengelola (opsional)" value={rupiah(sum(aktif, (r) => r.total_biaya))}
+          sub={tarif ? `+ perkiraan jasa kelola ${rupiah(aktif.reduce((s, r) => s + Math.max(0, Math.floor((Date.now() - new Date(r.tanggal_beli).getTime()) / 864e5)) * Number(tarif), 0))}` : "tidak mengurangi bagian investor"} />
         <Stat label="Keuntungan terealisasi" value={rupiah(sum(terjual, (r) => r.keuntungan))}
           sub={`investor ${rupiah(sum(terjual, (r) => r.bagian_investor))} · pengelola ${rupiah(sum(terjual, (r) => r.bagian_pengelola))}`} />
       </div>
@@ -32,7 +35,7 @@ export default async function Dashboard() {
         </div>
         {aktif.length === 0 ? <p className="muted text-sm">Belum ada kambing. Tambahkan dari menu Kambing.</p> : (
           <table className="tbl">
-            <thead><tr><th>Kambing</th><th>Jalur</th><th className="num">Berat awal</th><th className="num">Berat terakhir</th><th className="num">Naik</th><th className="num">Modal</th><th className="num">Biaya</th></tr></thead>
+            <thead><tr><th>Kambing</th><th>Jalur</th><th className="num">Berat awal</th><th className="num">Berat terakhir</th><th className="num">Naik</th><th className="num">Modal</th></tr></thead>
             <tbody>
               {aktif.map((r) => (
                 <tr key={r.id}>
@@ -42,7 +45,6 @@ export default async function Dashboard() {
                   <td className="num">{kg(r.berat_terakhir)}</td>
                   <td className="num">{r.berat_awal && r.berat_terakhir ? kg(Number(r.berat_terakhir) - Number(r.berat_awal)) : "-"}</td>
                   <td className="num">{rupiah(r.harga_beli)}</td>
-                  <td className="num">{rupiah(r.total_biaya)}</td>
                 </tr>
               ))}
             </tbody>

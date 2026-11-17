@@ -9,7 +9,8 @@ export const tgl = (d: string | null | undefined) =>
 export const kg = (n: number | string | null | undefined) =>
   n === null || n === undefined ? "-" : Number(n).toLocaleString("id-ID") + " kg";
 
-export const namaJalur = (j: string) => (j === "idul_adha" ? "Idul Adha" : "Resto/cafe");
+export const namaJalur = (j: string) =>
+  ({ idul_adha: "Idul Adha", resto: "Resto/cafe", bongkaran: "Bongkaran" })[j] ?? j;
 export const namaStatus = (s: string) =>
   ({ dipelihara: "Dipelihara", terjual: "Terjual" })[s] ?? s;
 
