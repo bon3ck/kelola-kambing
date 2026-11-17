@@ -75,6 +75,11 @@ export default async function DetailKambing({ params, searchParams }: {
                 <option value="idul_adha">Idul Adha</option><option value="resto">Resto/cafe</option>
               </select>
             </Field>
+            <Field label="Status">
+              <select className="input" name="status" defaultValue={k.status}>
+                <option value="dipelihara">Dipelihara</option><option value="terjual">Terjual</option><option value="mati">Mati</option>
+              </select>
+            </Field>
             <Field label="Ras"><input className="input" name="ras" defaultValue={k.ras ?? ""} /></Field>
             <Field label="Catatan"><input className="input" name="catatan" defaultValue={k.catatan ?? ""} /></Field>
             <button className="btn-ghost col-span-2">Simpan perubahan</button>

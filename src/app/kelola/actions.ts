@@ -71,7 +71,7 @@ export async function ubahKambing(fd: FormData) {
   const { supabase } = await wajibPengelola();
   const id = num(fd, "id");
   const { error } = await supabase.from("kambing").update({
-    jalur: str(fd, "jalur"), ras: str(fd, "ras"), catatan: str(fd, "catatan"),
+    jalur: str(fd, "jalur"), status: str(fd, "status"), ras: str(fd, "ras"), catatan: str(fd, "catatan"),
   }).eq("id", id);
   if (error) gagal(`/kelola/kambing/${id}`, error.message);
   revalidatePath("/kelola", "layout");

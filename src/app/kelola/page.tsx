@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { wajibPengelola } from "@/lib/auth";
-import { rupiah, kg, namaJalur, type RingkasanKambing } from "@/lib/format";
+import { rupiah, kg, namaJalur, namaStatus, type RingkasanKambing } from "@/lib/format";
 import { Foto, Stat } from "@/components/ui";
 
 export default async function Dashboard() {
@@ -49,8 +49,10 @@ export default async function Dashboard() {
           </table>
         )}
       </section>
-      {terjual.length > 0 && (
-        <p className="muted text-sm">Juga ada {terjual.length} kambing terjual. Lihat di menu Kambing.</p>
+      {rows.some((r) => r.status !== "dipelihara") && (
+        <p className="muted text-sm">
+          Juga ada {terjual.length} kambing {namaStatus("terjual").toLowerCase()} dan {rows.filter((r) => r.status === "mati").length} mati. Lihat di menu Kambing.
+        </p>
       )}
     </>
   );

@@ -11,7 +11,7 @@ export const kg = (n: number | string | null | undefined) =>
 
 export const namaJalur = (j: string) => (j === "idul_adha" ? "Idul Adha" : "Resto/cafe");
 export const namaStatus = (s: string) =>
-  ({ dipelihara: "Dipelihara", terjual: "Terjual" })[s] ?? s;
+  ({ dipelihara: "Dipelihara", terjual: "Terjual", mati: "Mati" })[s] ?? s;
 
 export type RingkasanKambing = {
   id: number; kode: string; jenis_kelamin: string; ras: string | null; jalur: string; status: string;
