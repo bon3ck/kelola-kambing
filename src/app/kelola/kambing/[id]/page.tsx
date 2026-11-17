@@ -3,9 +3,9 @@ import { FotoInput } from "@/components/FotoInput";
 import { notFound } from "next/navigation";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, kg, namaJalur, tgl, type RingkasanKambing , labelInvestor, type InvestorLabel } from "@/lib/format";
-import { Field, Pesan, Pertumbuhan, hariIni } from "@/components/ui";
+import { Field, Foto, Pesan, Pertumbuhan, hariIni } from "@/components/ui";
 import {
-  ubahKambing, gantiFoto, catatTimbang, catatKesehatan, catatBiaya, catatPenjualan, tambahPemilik, hapus,
+  ubahKambing, gantiFoto, ubahJalur, catatTimbang, catatKesehatan, catatBiaya, catatPenjualan, tambahPemilik, hapus,
 } from "../../actions";
 
 function Hapus({ tabel, id, kambingId }: { tabel: string; id: number; kambingId?: number }) {
@@ -26,7 +26,7 @@ export default async function DetailKambing({ params, searchParams }: {
   const { pesan } = await searchParams;
   const kid = Number(id);
   const { supabase } = await wajibPengelola();
-  const [{ data: k }, { data: ring }, { data: timbang }, { data: sehat }, { data: biaya }, { data: jual }, { data: pemilik }, { data: investor }] =
+  const [{ data: k }, { data: ring }, { data: timbang }, { data: sehat }, { data: biaya }, { data: jual }, { data: pemilik }, { data: investor }, { data: riwayatJalur }] =
     await Promise.all([
       supabase.from("kambing").select("*").eq("id", kid).maybeSingle(),
       supabase.rpc("ringkasan_kambing"),
@@ -36,6 +36,7 @@ export default async function DetailKambing({ params, searchParams }: {
       supabase.from("penjualan").select("*").eq("kambing_id", kid).maybeSingle(),
       supabase.from("kepemilikan").select("id,modal,investor(id,nama,nama_panggilan,email)").eq("kambing_id", kid),
       supabase.from("investor").select("id,nama,nama_panggilan,email").order("id"),
+      supabase.from("perubahan_jalur").select("*").eq("kambing_id", kid).order("dibuat", { ascending: false }),
     ]);
   if (!k) notFound();
   const r = ((ring ?? []) as RingkasanKambing[]).find((x) => x.id === kid)!;
@@ -70,11 +71,6 @@ export default async function DetailKambing({ params, searchParams }: {
           </dl>
           <form action={ubahKambing} className="grid grid-cols-2 gap-2">
             <input type="hidden" name="id" value={k.id} />
-            <Field label="Jalur">
-              <select className="input" name="jalur" defaultValue={k.jalur}>
-                <option value="idul_adha">Idul Adha</option><option value="resto">Resto/cafe</option>
-              </select>
-            </Field>
             <Field label="Ras"><input className="input" name="ras" defaultValue={k.ras ?? ""} /></Field>
             <Field label="Catatan"><input className="input" name="catatan" defaultValue={k.catatan ?? ""} /></Field>
             <button className="btn-ghost col-span-2">Simpan perubahan</button>
@@ -117,6 +113,43 @@ export default async function DetailKambing({ params, searchParams }: {
           )}
         </section>
       </div>
+
+      {k.status === "dipelihara" && (
+        <section className="card space-y-3">
+          <h2>Ubah jalur jual</h2>
+          <p className="muted text-xs">
+            Investor otomatis diberi tahu di halamannya. Kalau kambing Idul Adha harus dipotong lebih awal karena kondisinya menurun,
+            bagi hasil berubah menjadi 30% investor, dan <b>foto kondisi terbaru wajib dilampirkan</b>. Grafik timbang ikut terlihat oleh investor.
+          </p>
+          <form action={ubahJalur} className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            <input type="hidden" name="kambing_id" value={kid} />
+            <Field label="Jalur baru">
+              <select className="input" name="ke" defaultValue={k.jalur === "idul_adha" ? "resto" : "idul_adha"}>
+                <option value="idul_adha">Idul Adha (50%)</option><option value="resto">Resto/cafe, potong (30%)</option><option value="bongkaran">Bongkaran (30%)</option>
+              </select>
+            </Field>
+            <Field label="Tanggal"><input className="input" type="date" name="tanggal" defaultValue={hariIni()} required /></Field>
+            <div className="lg:col-span-2"><Field label="Alasan (dibaca investor)"><input className="input" name="alasan" required placeholder="Berat tidak naik 3 minggu, nafsu makan turun" /></Field></div>
+            <Field label="Foto kondisi terbaru"><FotoInput /></Field>
+            <div className="sm:col-span-2 lg:col-span-5"><button className="btn">Ubah jalur dan beri tahu investor</button></div>
+          </form>
+        </section>
+      )}
+
+      {(riwayatJalur ?? []).length > 0 && (
+        <section className="card space-y-2">
+          <h2>Riwayat perubahan jalur</h2>
+          {(riwayatJalur ?? []).map((r) => (
+            <div key={r.id} className="flex gap-3 text-sm">
+              <Foto url={r.foto_url} size={56} />
+              <div>
+                <div>{tgl(r.tanggal)}: {namaJalur(r.dari)} → <b>{namaJalur(r.ke)}</b> {r.darurat && <span className="badge">darurat</span>}</div>
+                <div className="muted">{r.alasan}</div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="card space-y-3">
         <h2>Investor</h2>

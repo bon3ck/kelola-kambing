@@ -17,6 +17,7 @@ export default async function Portal() {
     supabase.from("kesehatan").select("kambing_id,tanggal,keterangan").order("tanggal", { ascending: false }),
   ]);
   const { data: foto } = await supabase.from("kambing").select("id,foto_url");
+  const { data: kabar } = await supabase.from("perubahan_jalur").select("*").order("dibuat", { ascending: false }).limit(20);
   const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
   const milik = (ri ?? []) as RingkasanInvestor[];
   const kambing = new Map(((rk ?? []) as RingkasanKambing[]).map((k) => [k.id, k]));
@@ -40,6 +41,24 @@ export default async function Portal() {
           <p className="card text-sm">Belum ada kambing atas nama Anda. Kalau Anda sudah berinvestasi, minta pengelola mendaftarkan email {user.email}.</p>
         ) : (
           <>
+            {(kabar ?? []).length > 0 && (
+              <section className="card space-y-3" style={{ borderColor: "var(--accent)" }}>
+                <h2>Pemberitahuan</h2>
+                {(kabar ?? []).map((r) => (
+                  <div key={r.id} className="flex gap-3 text-sm">
+                    <Foto url={r.foto_url} size={72} />
+                    <div>
+                      <div>
+                        {tgl(r.tanggal)}: {kambing.get(r.kambing_id)?.kode} pindah dari {namaJalur(r.dari)} ke <b>{namaJalur(r.ke)}</b>
+                        {r.darurat && <span className="badge ml-1">darurat, dipotong lebih awal</span>}
+                      </div>
+                      <div>Alasan: {r.alasan}</div>
+                      <div className="muted text-xs">Bagi hasil untuk Anda menjadi {r.ke === "idul_adha" ? "50%" : "30%"} dari keuntungan.</div>
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <Stat label="Kambing" value={String(milik.length)} sub={`${milik.filter((m) => m.status === "dipelihara").length} masih dipelihara`} />
               <Stat label="Total modal" value={rupiah(sum((r) => r.modal))} />
