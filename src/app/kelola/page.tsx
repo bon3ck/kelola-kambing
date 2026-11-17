@@ -1,0 +1,57 @@
+import Link from "next/link";
+import { wajibPengelola } from "@/lib/auth";
+import { rupiah, kg, namaJalur, namaStatus, type RingkasanKambing } from "@/lib/format";
+import { Stat } from "@/components/ui";
+
+export default async function Dashboard() {
+  const { supabase } = await wajibPengelola();
+  const { data } = await supabase.rpc("ringkasan_kambing");
+  const rows = (data ?? []) as RingkasanKambing[];
+  const aktif = rows.filter((r) => r.status === "dipelihara");
+  const terjual = rows.filter((r) => r.status === "terjual");
+  const sum = (a: RingkasanKambing[], f: (r: RingkasanKambing) => number | null) => a.reduce((s, r) => s + Number(f(r) ?? 0), 0);
+  const { count: nInvestor } = await supabase.from("investor").select("*", { count: "exact", head: true });
+
+  return (
+    <>
+      <h1>Ringkasan</h1>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Kambing dipelihara" value={String(aktif.length)}
+          sub={`${aktif.filter((r) => r.jalur === "idul_adha").length} Idul Adha · ${aktif.filter((r) => r.jalur === "resto").length} resto`} />
+        <Stat label="Modal di kandang" value={rupiah(sum(aktif, (r) => r.harga_beli))} sub={`${nInvestor ?? 0} investor`} />
+        <Stat label="Biaya berjalan" value={rupiah(sum(aktif, (r) => r.total_biaya))} sub="kambing yang masih dipelihara" />
+        <Stat label="Keuntungan terealisasi" value={rupiah(sum(terjual, (r) => r.keuntungan))}
+          sub={`investor ${rupiah(sum(terjual, (r) => r.bagian_investor))} · pengelola ${rupiah(sum(terjual, (r) => r.bagian_pengelola))}`} />
+      </div>
+      <section className="card overflow-x-auto">
+        <div className="mb-3 flex items-center justify-between">
+          <h2>Kambing dipelihara</h2>
+          <Link href="/kelola/kambing" className="btn-ghost">+ Tambah kambing</Link>
+        </div>
+        {aktif.length === 0 ? <p className="muted text-sm">Belum ada kambing. Tambahkan dari menu Kambing.</p> : (
+          <table className="tbl">
+            <thead><tr><th>Kode</th><th>Jalur</th><th className="num">Berat awal</th><th className="num">Berat terakhir</th><th className="num">Naik</th><th className="num">Modal</th><th className="num">Biaya</th></tr></thead>
+            <tbody>
+              {aktif.map((r) => (
+                <tr key={r.id}>
+                  <td><Link className="underline" href={`/kelola/kambing/${r.id}`}>{r.kode}</Link> <span className="muted">{r.jenis_kelamin}</span></td>
+                  <td>{namaJalur(r.jalur)}</td>
+                  <td className="num">{kg(r.berat_awal)}</td>
+                  <td className="num">{kg(r.berat_terakhir)}</td>
+                  <td className="num">{r.berat_awal && r.berat_terakhir ? kg(Number(r.berat_terakhir) - Number(r.berat_awal)) : "-"}</td>
+                  <td className="num">{rupiah(r.harga_beli)}</td>
+                  <td className="num">{rupiah(r.total_biaya)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+      {rows.some((r) => r.status !== "dipelihara") && (
+        <p className="muted text-sm">
+          Juga ada {terjual.length} kambing {namaStatus("terjual").toLowerCase()} dan {rows.filter((r) => r.status === "mati").length} mati. Lihat di menu Kambing.
+        </p>
+      )}
+    </>
+  );
+}
