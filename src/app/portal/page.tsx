@@ -1,6 +1,6 @@
 import { getSesi } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
-import { Stat, Pertumbuhan } from "@/components/ui";
+import { Foto, Stat, Pertumbuhan } from "@/components/ui";
 import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing, type RingkasanInvestor } from "@/lib/format";
 
 export default async function Portal() {
@@ -12,6 +12,8 @@ export default async function Portal() {
     supabase.from("timbang").select("kambing_id,tanggal,berat").order("tanggal"),
     supabase.from("kesehatan").select("kambing_id,tanggal,keterangan").order("tanggal", { ascending: false }),
   ]);
+  const { data: foto } = await supabase.from("kambing").select("id,foto_url");
+  const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
   const milik = (ri ?? []) as RingkasanInvestor[];
   const kambing = new Map(((rk ?? []) as RingkasanKambing[]).map((k) => [k.id, k]));
   const sum = (f: (r: RingkasanInvestor) => number | null) => milik.reduce((s, r) => s + Number(f(r) ?? 0), 0);
@@ -38,6 +40,7 @@ export default async function Portal() {
               return (
                 <section key={m.kambing_id} className="card space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
+                    <Foto url={fotoOf.get(m.kambing_id)} size={64} />
                     <h2>{m.kode}</h2>
                     <span className="badge">{k.jenis_kelamin}</span>
                     <span className="badge">{namaJalur(m.jalur)}</span>

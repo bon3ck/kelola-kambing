@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, kg, namaJalur, namaStatus, type RingkasanKambing } from "@/lib/format";
-import { Stat } from "@/components/ui";
+import { Foto, Stat } from "@/components/ui";
 
 export default async function Dashboard() {
   const { supabase } = await wajibPengelola();
@@ -10,6 +10,8 @@ export default async function Dashboard() {
   const aktif = rows.filter((r) => r.status === "dipelihara");
   const terjual = rows.filter((r) => r.status === "terjual");
   const sum = (a: RingkasanKambing[], f: (r: RingkasanKambing) => number | null) => a.reduce((s, r) => s + Number(f(r) ?? 0), 0);
+  const { data: foto } = await supabase.from("kambing").select("id,foto_url");
+  const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
   const { count: nInvestor } = await supabase.from("investor").select("*", { count: "exact", head: true });
 
   return (
@@ -30,11 +32,11 @@ export default async function Dashboard() {
         </div>
         {aktif.length === 0 ? <p className="muted text-sm">Belum ada kambing. Tambahkan dari menu Kambing.</p> : (
           <table className="tbl">
-            <thead><tr><th>Kode</th><th>Jalur</th><th className="num">Berat awal</th><th className="num">Berat terakhir</th><th className="num">Naik</th><th className="num">Modal</th><th className="num">Biaya</th></tr></thead>
+            <thead><tr><th>Kambing</th><th>Jalur</th><th className="num">Berat awal</th><th className="num">Berat terakhir</th><th className="num">Naik</th><th className="num">Modal</th><th className="num">Biaya</th></tr></thead>
             <tbody>
               {aktif.map((r) => (
                 <tr key={r.id}>
-                  <td><Link className="underline" href={`/kelola/kambing/${r.id}`}>{r.kode}</Link> <span className="muted">{r.jenis_kelamin}</span></td>
+                  <td><Link className="flex items-center gap-2 underline" href={`/kelola/kambing/${r.id}`}><Foto url={fotoOf.get(r.id)} />{r.kode} <span className="muted no-underline">{r.jenis_kelamin}</span></Link></td>
                   <td>{namaJalur(r.jalur)}</td>
                   <td className="num">{kg(r.berat_awal)}</td>
                   <td className="num">{kg(r.berat_terakhir)}</td>

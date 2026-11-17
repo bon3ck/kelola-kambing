@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { FotoInput } from "@/components/FotoInput";
 import { notFound } from "next/navigation";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, kg, namaJalur, tgl, type RingkasanKambing } from "@/lib/format";
 import { Field, Pesan, Pertumbuhan, hariIni } from "@/components/ui";
 import {
-  ubahKambing, catatTimbang, catatKesehatan, catatBiaya, catatPenjualan, tambahPemilik, hapus,
+  ubahKambing, gantiFoto, catatTimbang, catatKesehatan, catatBiaya, catatPenjualan, tambahPemilik, hapus,
 } from "../../actions";
 
 function Hapus({ tabel, id, kambingId }: { tabel: string; id: number; kambingId?: number }) {
@@ -55,6 +56,11 @@ export default async function DetailKambing({ params, searchParams }: {
         <section className="card space-y-3 lg:col-span-1">
           {k.foto_url && /* eslint-disable-next-line @next/next/no-img-element */
             <img src={k.foto_url} alt={`Foto ${k.kode}`} className="aspect-square w-full rounded-lg object-cover" />}
+          <form action={gantiFoto} className="flex items-end gap-2">
+            <input type="hidden" name="id" value={k.id} />
+            <Field label={k.foto_url ? "Ganti foto" : "Tambah foto"}><FotoInput required /></Field>
+            <button className="btn-ghost">Unggah</button>
+          </form>
           <dl className="grid grid-cols-2 gap-y-1 text-sm">
             <dt className="muted">Ras</dt><dd>{k.ras ?? "-"}</dd>
             <dt className="muted">Tanggal beli</dt><dd>{tgl(k.tanggal_beli)}</dd>

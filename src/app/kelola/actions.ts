@@ -19,17 +19,33 @@ function gagal(path: string, msg: string): never {
   redirect(path + (path.includes("?") ? "&" : "?") + "pesan=" + encodeURIComponent(msg));
 }
 
+async function unggahFoto(supabase: Awaited<ReturnType<typeof wajibPengelola>>["supabase"], fd: FormData) {
+  const foto = fd.get("foto") as File | null;
+  if (!foto || foto.size === 0) return null;
+  const nama = `${Date.now()}-${foto.name.replace(/[^\w.]/g, "_")}`;
+  const { error } = await supabase.storage.from("foto-kambing").upload(nama, foto, { contentType: foto.type });
+  return error ? null : supabase.storage.from("foto-kambing").getPublicUrl(nama).data.publicUrl;
+}
+
+export async function gantiFoto(fd: FormData) {
+  const { supabase } = await wajibPengelola();
+  const id = num(fd, "id");
+  const foto_url = await unggahFoto(supabase, fd);
+  if (!foto_url) gagal(`/kelola/kambing/${id}`, "Foto gagal diunggah. Coba foto yang lebih kecil.");
+  await supabase.from("kambing").update({ foto_url }).eq("id", id);
+  revalidatePath("/kelola", "layout");
+}
+
 export async function tambahKambing(fd: FormData) {
   const { supabase } = await wajibPengelola();
-  let foto_url: string | null = null;
-  const foto = fd.get("foto") as File | null;
-  if (foto && foto.size > 0) {
-    const nama = `${Date.now()}-${foto.name.replace(/[^\w.]/g, "_")}`;
-    const { error } = await supabase.storage.from("foto-kambing").upload(nama, foto, { contentType: foto.type });
-    if (!error) foto_url = supabase.storage.from("foto-kambing").getPublicUrl(nama).data.publicUrl;
+  const foto_url = await unggahFoto(supabase, fd);
+  let kode = str(fd, "kode");
+  if (!kode) {
+    const { count } = await supabase.from("kambing").select("*", { count: "exact", head: true });
+    kode = `KB-${String((count ?? 0) + 1).padStart(3, "0")}`;
   }
   const { data, error } = await supabase.from("kambing").insert({
-    kode: str(fd, "kode"),
+    kode,
     jenis_kelamin: str(fd, "jenis_kelamin"),
     ras: str(fd, "ras"),
     tanggal_beli: str(fd, "tanggal_beli"),

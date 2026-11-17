@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { FotoInput } from "@/components/FotoInput";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing } from "@/lib/format";
-import { Field, Pesan, hariIni } from "@/components/ui";
+import { Field, Foto, Pesan, hariIni } from "@/components/ui";
 import { tambahKambing } from "../actions";
 
 export default async function DaftarKambing({ searchParams }: { searchParams: Promise<{ pesan?: string }> }) {
@@ -11,6 +12,8 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
     supabase.rpc("ringkasan_kambing"),
     supabase.from("investor").select("id,nama").order("nama"),
   ]);
+  const { data: foto } = await supabase.from("kambing").select("id,foto_url");
+  const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
   const rows = (data ?? []) as RingkasanKambing[];
 
   return (
@@ -20,11 +23,11 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
       <section className="card overflow-x-auto">
         {rows.length === 0 ? <p className="muted text-sm">Belum ada kambing.</p> : (
           <table className="tbl">
-            <thead><tr><th>Kode</th><th>Kelamin</th><th>Jalur</th><th>Status</th><th>Tgl beli</th><th className="num">Berat</th><th className="num">Modal</th><th className="num">Biaya</th><th className="num">Harga jual</th><th className="num">Keuntungan</th></tr></thead>
+            <thead><tr><th>Kambing</th><th>Kelamin</th><th>Jalur</th><th>Status</th><th>Tgl beli</th><th className="num">Berat</th><th className="num">Modal</th><th className="num">Biaya</th><th className="num">Harga jual</th><th className="num">Keuntungan</th></tr></thead>
             <tbody>
               {rows.map((r) => (
                 <tr key={r.id}>
-                  <td><Link className="underline" href={`/kelola/kambing/${r.id}`}>{r.kode}</Link></td>
+                  <td><Link className="flex items-center gap-2 underline" href={`/kelola/kambing/${r.id}`}><Foto url={fotoOf.get(r.id)} />{r.kode}</Link></td>
                   <td>{r.jenis_kelamin}</td>
                   <td>{namaJalur(r.jalur)}</td>
                   <td><span className="badge">{namaStatus(r.status)}</span></td>
@@ -44,7 +47,12 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
       <section className="card">
         <h2 className="mb-3">Tambah kambing</h2>
         <form action={tambahKambing} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Kode / nomor eartag"><input className="input" name="kode" required placeholder="KB-001" /></Field>
+          <div className="sm:col-span-2 lg:col-span-4">
+            <Field label="Foto kambing (dipakai sebagai identitas)">
+              <FotoInput required />
+            </Field>
+          </div>
+          <Field label="Nama / kode (opsional, otomatis KB-001 dst.)"><input className="input" name="kode" placeholder="Si Belang" /></Field>
           <Field label="Jenis kelamin">
             <select className="input" name="jenis_kelamin" required defaultValue="jantan">
               <option value="jantan">Jantan</option><option value="betina">Betina</option>
@@ -65,8 +73,7 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
               {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{i.nama}</option>)}
             </select>
           </Field>
-          <Field label="Foto"><input className="input" type="file" name="foto" accept="image/*" capture="environment" /></Field>
-          <div className="sm:col-span-2 lg:col-span-2"><Field label="Catatan"><input className="input" name="catatan" /></Field></div>
+          <div className="sm:col-span-2 lg:col-span-3"><Field label="Ciri-ciri / catatan"><input className="input" name="catatan" placeholder="Putih belang hitam, tanduk pendek" /></Field></div>
           <div className="flex items-end"><button className="btn w-full">Simpan</button></div>
         </form>
       </section>

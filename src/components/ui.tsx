@@ -47,3 +47,13 @@ export function Pertumbuhan({ data }: { data: { tanggal: string; berat: number }
     </svg>
   );
 }
+
+export function Foto({ url, size = 40 }: { url?: string | null; size?: number }) {
+  if (!url)
+    return (
+      <span className="inline-flex items-center justify-center rounded-md text-xs muted"
+        style={{ width: size, height: size, border: "1px dashed var(--line)" }}>🐐</span>
+    );
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt="" width={size} height={size} className="rounded-md object-cover" style={{ width: size, height: size }} />;
+}
