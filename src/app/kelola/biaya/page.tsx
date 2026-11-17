@@ -1,3 +1,4 @@
+import { MetodeFields } from "@/components/Metode";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, tgl } from "@/lib/format";
 import { Field, Pesan, hariIni } from "@/components/ui";
@@ -33,6 +34,7 @@ export default async function BiayaBersama({ searchParams }: { searchParams: Pro
           </Field>
           <Field label="Jumlah (Rp)"><input className="input" name="jumlah" inputMode="numeric" required /></Field>
           <Field label="Keterangan"><input className="input" name="keterangan" placeholder="Rumput 1 minggu" /></Field>
+          <MetodeFields />
           <div className="flex items-end"><button className="btn w-full">Catat</button></div>
         </form>
       </section>

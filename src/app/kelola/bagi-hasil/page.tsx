@@ -41,6 +41,7 @@ export default async function BagiHasil({ searchParams }: { searchParams: Promis
                         <input type="hidden" name="kambing_id" value={r.kambing_id} />
                         <input type="hidden" name="tanggal" value={hariIni()} />
                         <input className="input w-32" name="jumlah" defaultValue={String(r.sisa)} inputMode="numeric" />
+                        <select className="input w-24" name="metode" defaultValue="transfer"><option value="transfer">Transfer</option><option value="tunai">Tunai</option></select>
                         <button className="btn-ghost">Bayar</button>
                       </form>
                     )}

@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Nav({ peran, email, admin }: { peran: "pengelola" | "investor"; email?: string; admin?: boolean }) {
   const links =
     peran === "pengelola"
-      ? [["/kelola", "Ringkasan"], ["/kelola/kambing", "Kambing"], ["/kelola/borongan", "Bongkaran"], ["/kelola/biaya", "Biaya pengelola"],
+      ? [["/kelola", "Ringkasan"], ["/kelola/kambing", "Kambing"], ["/kelola/borongan", "Bongkaran"], ["/kelola/kas", "Buku kas"], ["/kelola/permintaan", "Permintaan dana"], ["/kelola/biaya", "Biaya pengelola"],
          ["/kelola/investor", "Investor"], ["/kelola/bagi-hasil", "Bagi hasil"],
          ...(admin ? [["/kelola/pengelola", "Pengelola"]] : [])]
       : [["/portal", "Kambing saya"]];

@@ -1,3 +1,4 @@
+import { MetodeFields } from "@/components/Metode";
 import Link from "next/link";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, tgl, labelInvestor } from "@/lib/format";
@@ -52,6 +53,7 @@ export default async function Borongan({ searchParams }: { searchParams: Promise
           </Field>
           <Field label="Jumlah ekor"><input className="input" name="jumlah_ekor" inputMode="numeric" required placeholder="10" /></Field>
           <Field label="Harga total (Rp)"><input className="input" name="harga_total" inputMode="numeric" required placeholder="25000000" /></Field>
+          <MetodeFields />
           <div className="sm:col-span-2"><Field label="Catatan"><input className="input" name="catatan" /></Field></div>
           {[1, 2, 3].map((i) => (
             <div key={i} className="grid grid-cols-2 gap-2 sm:col-span-2">

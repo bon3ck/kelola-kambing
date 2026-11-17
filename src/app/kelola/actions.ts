@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { wajibAdmin, wajibPengelola } from "@/lib/auth";
+import { catatKas, jenisKas } from "@/lib/kas";
 
 const str = (fd: FormData, k: string) => {
   const v = fd.get(k);
@@ -37,7 +38,7 @@ export async function gantiFoto(fd: FormData) {
 }
 
 export async function tambahKambing(fd: FormData) {
-  const { supabase } = await wajibPengelola();
+  const { supabase, user } = await wajibPengelola();
   const foto_url = await unggahFoto(supabase, fd);
   let kode = str(fd, "kode");
   if (!kode) {
@@ -56,6 +57,10 @@ export async function tambahKambing(fd: FormData) {
     foto_url,
   }).select("id").single();
   if (error) gagal("/kelola/kambing", error.code === "23505" ? "Kode kambing sudah dipakai." : error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal_beli"), jenis: "beli_kambing", jumlah: num(fd, "harga_beli") ?? 0,
+    kambing_id: data.id, keterangan: `Beli ${kode}`, sumber_tabel: "kambing", sumber_id: data.id,
+  });
   const investor_id = num(fd, "investor_id");
   if (investor_id) {
     await supabase.from("kepemilikan").insert({ kambing_id: data.id, investor_id, modal: num(fd, "harga_beli") });
@@ -90,28 +95,46 @@ export async function catatTimbang(fd: FormData) {
 }
 
 export async function catatKesehatan(fd: FormData) {
+  const { supabase, user } = await wajibPengelola();
   const id = num(fd, "kambing_id");
-  await catat("kesehatan", {
+  const { data, error } = await supabase.from("kesehatan").insert({
     kambing_id: id, tanggal: str(fd, "tanggal"), keterangan: str(fd, "keterangan"),
     obat: str(fd, "obat"), dosis: str(fd, "dosis"), biaya: num(fd, "biaya") ?? 0,
-  }, `/kelola/kambing/${id}`);
+  }).select("id").single();
+  if (error) gagal(`/kelola/kambing/${id}`, error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis: "obat", jumlah: num(fd, "biaya") ?? 0, kambing_id: id,
+    keterangan: str(fd, "keterangan"), sumber_tabel: "kesehatan", sumber_id: data.id,
+  });
+  revalidatePath("/kelola", "layout");
 }
 
 export async function catatBiaya(fd: FormData) {
+  const { supabase, user } = await wajibPengelola();
   const id = num(fd, "kambing_id");
-  await catat("biaya", {
-    kambing_id: id, tanggal: str(fd, "tanggal"), jenis: str(fd, "jenis"),
-    jumlah: num(fd, "jumlah"), keterangan: str(fd, "keterangan"),
-  }, id ? `/kelola/kambing/${id}` : "/kelola/biaya");
+  const jenis = str(fd, "jenis") ?? "lain";
+  const { data, error } = await supabase.from("biaya").insert({
+    kambing_id: id, tanggal: str(fd, "tanggal"), jenis, jumlah: num(fd, "jumlah"), keterangan: str(fd, "keterangan"),
+  }).select("id").single();
+  if (error) gagal(id ? `/kelola/kambing/${id}` : "/kelola/biaya", error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis: jenis === "lain" ? "lain_keluar" : jenis, jumlah: num(fd, "jumlah") ?? 0,
+    kambing_id: id, keterangan: str(fd, "keterangan"), sumber_tabel: "biaya", sumber_id: data.id,
+  });
+  revalidatePath("/kelola", "layout");
 }
 
 export async function catatPenjualan(fd: FormData) {
-  const { supabase } = await wajibPengelola();
+  const { supabase, user } = await wajibPengelola();
   const id = num(fd, "kambing_id");
-  const { error } = await supabase.from("penjualan").upsert({
+  const { data, error } = await supabase.from("penjualan").upsert({
     kambing_id: id, tanggal: str(fd, "tanggal"), pembeli: str(fd, "pembeli"), harga_jual: num(fd, "harga_jual"),
-  }, { onConflict: "kambing_id" });
+  }, { onConflict: "kambing_id" }).select("id").single();
   if (error) gagal(`/kelola/kambing/${id}`, error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis: "hasil_jual", jumlah: num(fd, "harga_jual") ?? 0, kambing_id: id,
+    keterangan: `Jual ke ${str(fd, "pembeli") ?? "-"}`, sumber_tabel: "penjualan", sumber_id: data.id,
+  });
   await supabase.from("kambing").update({ status: "terjual" }).eq("id", id);
   revalidatePath("/kelola", "layout");
 }
@@ -126,6 +149,7 @@ export async function hapus(fd: FormData) {
   const tabel = String(fd.get("tabel"));
   if (!["timbang", "kesehatan", "biaya", "kepemilikan", "pembayaran", "penjualan"].includes(tabel)) return;
   await supabase.from(tabel).delete().eq("id", num(fd, "id"));
+  await supabase.from("kas").delete().eq("sumber_tabel", tabel).eq("sumber_id", num(fd, "id"));
   if (tabel === "penjualan") await supabase.from("kambing").update({ status: "dipelihara" }).eq("id", num(fd, "kambing_id"));
   revalidatePath("/kelola", "layout");
 }
@@ -141,10 +165,17 @@ export async function tambahInvestor(fd: FormData) {
 }
 
 export async function catatPembayaran(fd: FormData) {
-  await catat("pembayaran", {
+  const { supabase, user } = await wajibPengelola();
+  const { data, error } = await supabase.from("pembayaran").insert({
     investor_id: num(fd, "investor_id"), kambing_id: num(fd, "kambing_id"),
     tanggal: str(fd, "tanggal"), jumlah: num(fd, "jumlah"), catatan: str(fd, "catatan"),
-  }, "/kelola/bagi-hasil");
+  }).select("id").single();
+  if (error) gagal("/kelola/bagi-hasil", error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis: "bayar_investor", jumlah: num(fd, "jumlah") ?? 0,
+    investor_id: num(fd, "investor_id"), kambing_id: num(fd, "kambing_id"), sumber_tabel: "pembayaran", sumber_id: data.id,
+  });
+  revalidatePath("/kelola", "layout");
 }
 
 export async function putuskanPengelola(fd: FormData) {
@@ -208,7 +239,7 @@ export async function ubahJalur(fd: FormData) {
 
 type Pemodal = { investor_id: number; modal: number };
 export async function buatBorongan(fd: FormData) {
-  const { supabase } = await wajibPengelola();
+  const { supabase, user } = await wajibPengelola();
   const n = Math.max(1, Math.floor(num(fd, "jumlah_ekor") ?? 0));
   const total = num(fd, "harga_total") ?? 0;
   const tanggal = str(fd, "tanggal_beli");
@@ -220,6 +251,10 @@ export async function buatBorongan(fd: FormData) {
     foto_url, catatan: str(fd, "catatan"),
   }).select("id").single();
   if (error) gagal("/kelola/borongan", error.code === "23505" ? "Kode borongan sudah dipakai." : error.message);
+  await catatKas(supabase, user, fd, {
+    tanggal, jenis: "beli_kambing", jumlah: total, borongan_id: b.id,
+    keterangan: `Beli borongan ${kode} (${n} ekor)`, sumber_tabel: "borongan", sumber_id: b.id,
+  });
   const per = Math.floor(total / n);
   const rows = Array.from({ length: n }, (_, i) => ({
     kode: `${kode}-${String(i + 1).padStart(2, "0")}`,
@@ -244,7 +279,7 @@ export async function buatBorongan(fd: FormData) {
 }
 
 export async function jualBorongan(fd: FormData) {
-  const { supabase } = await wajibPengelola();
+  const { supabase, user } = await wajibPengelola();
   const id = num(fd, "borongan_id");
   const back = `/kelola/borongan/${id}`;
   const { data: sisa } = await supabase.from("kambing").select("id").eq("borongan_id", id).eq("status", "dipelihara");
@@ -258,5 +293,50 @@ export async function jualBorongan(fd: FormData) {
   const { error } = await supabase.from("penjualan").upsert(rows, { onConflict: "kambing_id" });
   if (error) gagal(back, error.message);
   await supabase.from("kambing").update({ status: "terjual" }).in("id", sisa.map((k) => k.id));
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis: "hasil_jual", jumlah: total, borongan_id: id,
+    keterangan: `Jual ${sisa.length} ekor borongan ke ${str(fd, "pembeli") ?? "-"}`,
+  });
+  revalidatePath("/kelola", "layout");
+}
+
+export async function tambahKas(fd: FormData) {
+  const { supabase, user } = await wajibPengelola();
+  const jenis = str(fd, "jenis") ?? "";
+  if (!jenisKas[jenis]) gagal("/kelola/kas", "Pilih jenis transaksi.");
+  if (jenis === "modal_masuk" && !num(fd, "investor_id")) gagal("/kelola/kas", "Pilih investor untuk modal masuk.");
+  await catatKas(supabase, user, fd, {
+    tanggal: str(fd, "tanggal"), jenis, jumlah: num(fd, "jumlah") ?? 0, investor_id: num(fd, "investor_id"),
+    keterangan: str(fd, "keterangan"),
+  });
+  const pid = num(fd, "permintaan_id");
+  if (pid) revalidatePath("/kelola/permintaan");
+  revalidatePath("/kelola", "layout");
+  redirect("/kelola/kas");
+}
+
+export async function hapusKas(fd: FormData) {
+  const { supabase } = await wajibAdmin();
+  await supabase.from("kas").delete().eq("id", num(fd, "id")).is("sumber_tabel", null);
+  revalidatePath("/kelola", "layout");
+}
+
+export async function buatPermintaan(fd: FormData) {
+  const { supabase, user } = await wajibPengelola();
+  const untuk_semua = str(fd, "untuk") !== "pilih";
+  const target = fd.getAll("target").map((v) => Number(v)).filter(Boolean);
+  if (!untuk_semua && target.length === 0) gagal("/kelola/permintaan", "Pilih minimal satu investor.");
+  const { data, error } = await supabase.from("permintaan_dana").insert({
+    judul: str(fd, "judul"), jalur: str(fd, "jalur"), jumlah_ekor: num(fd, "jumlah_ekor"), nominal: num(fd, "nominal"),
+    keterangan: str(fd, "keterangan"), untuk_semua, dibuat_oleh: user.id,
+  }).select("id").single();
+  if (error) gagal("/kelola/permintaan", error.message);
+  if (!untuk_semua) await supabase.from("permintaan_target").insert(target.map((investor_id) => ({ permintaan_id: data.id, investor_id })));
+  revalidatePath("/kelola", "layout");
+}
+
+export async function batalkanPermintaan(fd: FormData) {
+  const { supabase } = await wajibPengelola();
+  await supabase.from("permintaan_dana").update({ status: "dibatalkan" }).eq("id", num(fd, "id")).eq("status", "terbuka");
   revalidatePath("/kelola", "layout");
 }

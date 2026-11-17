@@ -1,3 +1,4 @@
+import { MetodeFields } from "@/components/Metode";
 import Link from "next/link";
 import { FotoInput } from "@/components/FotoInput";
 import { notFound } from "next/navigation";
@@ -108,6 +109,7 @@ export default async function DetailKambing({ params, searchParams }: {
               <Field label="Tanggal jual"><input className="input" type="date" name="tanggal" defaultValue={hariIni()} required /></Field>
               <Field label="Pembeli"><input className="input" name="pembeli" placeholder="Nama / resto" /></Field>
               <Field label="Harga jual (Rp)"><input className="input" name="harga_jual" inputMode="numeric" required /></Field>
+              <MetodeFields />
               <div className="flex items-end"><button className="btn w-full">Catat penjualan</button></div>
             </form>
           )}
@@ -211,6 +213,7 @@ export default async function DetailKambing({ params, searchParams }: {
             <Field label="Obat"><input className="input" name="obat" /></Field>
             <Field label="Dosis"><input className="input" name="dosis" /></Field>
             <Field label="Biaya obat/dokter (Rp, opsional)"><input className="input" name="biaya" inputMode="numeric" defaultValue="0" /></Field>
+            <MetodeFields />
             <div className="flex items-end"><button className="btn w-full">Catat</button></div>
           </form>
           <table className="tbl">
@@ -243,6 +246,7 @@ export default async function DetailKambing({ params, searchParams }: {
           </Field>
           <Field label="Jumlah (Rp)"><input className="input" name="jumlah" inputMode="numeric" required /></Field>
           <Field label="Keterangan"><input className="input" name="keterangan" /></Field>
+          <MetodeFields />
           <div className="flex items-end"><button className="btn w-full">Catat</button></div>
         </form>
         <table className="tbl">

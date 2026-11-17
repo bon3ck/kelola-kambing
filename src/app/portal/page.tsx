@@ -1,11 +1,13 @@
-import { isiNama } from "./actions";
+import { ambilPermintaan, isiNama } from "./actions";
+import { buktiUrls, jenisKas } from "@/lib/kas";
 import { redirect } from "next/navigation";
 import { getSesi } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
 import { Foto, Stat, Pertumbuhan } from "@/components/ui";
 import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing, type RingkasanInvestor } from "@/lib/format";
 
-export default async function Portal() {
+export default async function Portal({ searchParams }: { searchParams: Promise<{ ambil?: string }> }) {
+  const { ambil } = await searchParams;
   const { supabase, user, staf, menunggu } = await getSesi();
   if (menunggu) redirect("/menunggu");
   const peran = staf ? "pengelola" : "investor";
@@ -18,6 +20,11 @@ export default async function Portal() {
   ]);
   const { data: foto } = await supabase.from("kambing").select("id,foto_url");
   const { data: kabar } = await supabase.from("perubahan_jalur").select("*").order("dibuat", { ascending: false }).limit(20);
+  const { data: tawaran } = await supabase.from("permintaan_dana").select("*").order("dibuat", { ascending: false });
+  const { data: kas } = await supabase.from("kas").select("*").order("tanggal", { ascending: false });
+  const urls = await buktiUrls(supabase, (kas ?? []).map((r) => r.bukti_path));
+  const terbuka = (tawaran ?? []).filter((p) => p.status === "terbuka");
+  const punyaku = (tawaran ?? []).filter((p) => inv && p.diambil_oleh === inv.id);
   const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
   const milik = (ri ?? []) as RingkasanInvestor[];
   const kambing = new Map(((rk ?? []) as RingkasanKambing[]).map((k) => [k.id, k]));
@@ -36,6 +43,26 @@ export default async function Portal() {
             </div>
             <button className="btn">Simpan</button>
           </form>
+        )}
+        {ambil === "ok" && <p className="card text-sm" style={{ borderColor: "var(--accent)" }}>Berhasil. Penawaran ini sekarang milik Anda. Pengelola akan menghubungi Anda untuk penyerahan dana.</p>}
+        {ambil === "gagal" && <p className="card text-sm" style={{ borderColor: "#c0563b" }}>Maaf, penawaran ini sudah diambil investor lain atau sudah ditutup.</p>}
+        {inv && (terbuka.length > 0 || punyaku.length > 0) && (
+          <section className="card space-y-3">
+            <h2>Penawaran investasi</h2>
+            {terbuka.map((p) => (
+              <div key={p.id} className="flex flex-wrap items-center gap-3 text-sm">
+                <div className="grow">
+                  <b>{p.judul}</b> <span className="badge">{namaJalur(p.jalur)}</span>
+                  <div>{rupiah(p.nominal)}{p.jumlah_ekor ? ` · ${p.jumlah_ekor} ekor` : ""}{p.keterangan ? ` · ${p.keterangan}` : ""}</div>
+                  <div className="muted text-xs">Bagian Anda {p.jalur === "idul_adha" ? "50%" : "30%"} dari keuntungan (harga jual − harga beli). Siapa cepat dia dapat.</div>
+                </div>
+                <form action={ambilPermintaan}><input type="hidden" name="id" value={p.id} /><button className="btn">Ambil</button></form>
+              </div>
+            ))}
+            {punyaku.map((p) => (
+              <div key={p.id} className="muted text-sm">Sudah Anda ambil: {p.judul}, {rupiah(p.nominal)} ({tgl(p.diambil_pada)})</div>
+            ))}
+          </section>
         )}
         {milik.length === 0 ? (
           <p className="card text-sm">Belum ada kambing atas nama Anda. Kalau Anda sudah berinvestasi, minta pengelola mendaftarkan email {user.email}.</p>
@@ -103,6 +130,29 @@ export default async function Portal() {
                 </section>
               );
             })}
+            {(kas ?? []).length > 0 && (
+              <section className="card overflow-x-auto">
+                <h2 className="mb-2">Transaksi terkait Anda</h2>
+                <table className="tbl">
+                  <thead><tr><th>Tanggal</th><th>Jenis</th><th>Kambing</th><th>Metode</th><th>Bukti</th><th className="num">Jumlah</th></tr></thead>
+                  <tbody>
+                    {(kas ?? []).map((r) => {
+                      const url = r.bukti_path ? urls.get(r.bukti_path) : null;
+                      return (
+                        <tr key={r.id}>
+                          <td>{tgl(r.tanggal)}</td>
+                          <td>{jenisKas[r.jenis]?.label ?? r.jenis}</td>
+                          <td>{r.kambing_id ? kambing.get(r.kambing_id)?.kode : ""}</td>
+                          <td>{r.metode === "transfer" ? "Transfer" : "Tunai"}</td>
+                          <td>{url ? <a className="underline" href={url} target="_blank">lihat</a> : "-"}</td>
+                          <td className="num">{rupiah(r.jumlah)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </section>
+            )}
           </>
         )}
       </main>

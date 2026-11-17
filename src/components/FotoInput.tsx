@@ -1,7 +1,7 @@
 "use client";
 
 // Kecilkan foto di HP sebelum diunggah (batas unggah server sekitar 4 MB).
-export function FotoInput({ required }: { required?: boolean }) {
+export function FotoInput({ required, name = "foto" }: { required?: boolean; name?: string }) {
   async function kecilkan(e: React.ChangeEvent<HTMLInputElement>) {
     const input = e.currentTarget;
     const file = input.files?.[0];
@@ -22,5 +22,5 @@ export function FotoInput({ required }: { required?: boolean }) {
       // biarkan file asli
     }
   }
-  return <input className="input" type="file" name="foto" accept="image/*" capture="environment" required={required} onChange={kecilkan} />;
+  return <input className="input" type="file" name={name} accept="image/*" capture="environment" required={required} onChange={kecilkan} />;
 }

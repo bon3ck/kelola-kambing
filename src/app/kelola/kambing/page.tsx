@@ -1,3 +1,4 @@
+import { MetodeFields } from "@/components/Metode";
 import Link from "next/link";
 import { FotoInput } from "@/components/FotoInput";
 import { wajibPengelola } from "@/lib/auth";
@@ -72,6 +73,7 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
               {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{labelInvestor(i)}</option>)}
             </select>
           </Field>
+          <MetodeFields />
           <div className="sm:col-span-2 lg:col-span-3"><Field label="Ciri-ciri / catatan"><input className="input" name="catatan" placeholder="Putih belang hitam, tanduk pendek" /></Field></div>
           <div className="flex items-end"><button className="btn w-full">Simpan</button></div>
         </form>

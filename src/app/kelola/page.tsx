@@ -2,6 +2,7 @@ import Link from "next/link";
 import { wajibPengelola } from "@/lib/auth";
 import { rupiah, kg, namaJalur, type RingkasanKambing } from "@/lib/format";
 import { Foto, Stat } from "@/components/ui";
+import { hitungSaldo } from "@/lib/kas";
 
 export default async function Dashboard() {
   const { supabase } = await wajibPengelola();
@@ -16,6 +17,13 @@ export default async function Dashboard() {
   const tarif = t?.nilai;
   const { count: nInvestor } = await supabase.from("investor").select("*", { count: "exact", head: true });
 
+  const [{ data: kas }, { data: kp }, { count: nTawaran }] = await Promise.all([
+    supabase.from("kas").select("jenis,jumlah,metode,investor_id"),
+    supabase.from("kepemilikan").select("investor_id,modal"),
+    supabase.from("permintaan_dana").select("*", { count: "exact", head: true }).eq("status", "terbuka"),
+  ]);
+  const saldo = hitungSaldo(kas ?? [], kp ?? []);
+
   return (
     <>
       <h1>Ringkasan</h1>
@@ -28,6 +36,12 @@ export default async function Dashboard() {
         <Stat label="Keuntungan terealisasi" value={rupiah(sum(terjual, (r) => r.keuntungan))}
           sub={`investor ${rupiah(sum(terjual, (r) => r.bagian_investor))} · pengelola ${rupiah(sum(terjual, (r) => r.bagian_pengelola))}`} />
       </div>
+      <Link href="/kelola/kas" className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Saldo tunai" value={rupiah(saldo.tunai)} sub="lihat Buku kas" />
+        <Stat label="Saldo rekening" value={rupiah(saldo.transfer)} />
+        <Stat label="Dana investor belum terpakai" value={rupiah(saldo.totalBelumTerpakai)} />
+        <Stat label="Penawaran dana terbuka" value={String(nTawaran ?? 0)} />
+      </Link>
       <section className="card overflow-x-auto">
         <div className="mb-3 flex items-center justify-between">
           <h2>Kambing dipelihara</h2>

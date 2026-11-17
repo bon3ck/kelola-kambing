@@ -1,3 +1,4 @@
+import { MetodeFields } from "@/components/Metode";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { wajibPengelola } from "@/lib/auth";
@@ -48,6 +49,7 @@ export default async function DetailBorongan({ params, searchParams }: {
             <Field label="Tanggal jual"><input className="input" type="date" name="tanggal" defaultValue={hariIni()} required /></Field>
             <Field label="Pembeli"><input className="input" name="pembeli" /></Field>
             <Field label="Harga jual total (Rp)"><input className="input" name="harga_total" inputMode="numeric" required /></Field>
+            <MetodeFields />
             <div className="flex items-end"><button className="btn w-full">Catat penjualan</button></div>
           </form>
         </section>
