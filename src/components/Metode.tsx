@@ -16,7 +16,7 @@ export function MetodeFields({ wajibBukti = false }: { wajibBukti?: boolean }) {
         <input className="input" name="bank" placeholder="BCA, BRI…" />
       </label>
       <label className="block">
-        <span className="label">Foto nota / bukti{wajibBukti ? "" : " (disarankan)"}</span>
+        <span className="label">Foto nota / bukti{wajibBukti ? "" : " (opsional, tidak perlu kalau tunai)"}</span>
         <FotoInput name="bukti" required={wajibBukti} />
       </label>
     </>

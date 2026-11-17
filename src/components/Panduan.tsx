@@ -28,7 +28,7 @@ const PANDUAN: Record<string, Langkah[]> = {
   ],
   "/kelola/kas": [
     { judul: "Buku kas", isi: ["Saldo tunai: uang cash yang dipegang pengelola. Saldo rekening: uang dari transaksi transfer.", "Dana investor belum terpakai: modal yang sudah masuk tetapi belum dibelikan kambing.", "Transaksi dari menu lain otomatis masuk ke sini."] },
-    { judul: "Mengisi transaksi manual", isi: ["Jenis: pilih masuk atau keluar. Untuk modal dari investor pilih Modal masuk dan pilih investornya.", "Jumlah: angka saja, tanpa titik juga boleh.", "Dipegang oleh: nama orang yang memegang uang tunainya.", "Tunai/transfer, bank, dan foto nota: foto nota sangat disarankan, terutama untuk belanja di pasar tradisional."] },
+    { judul: "Mengisi transaksi manual", isi: ["Jenis: pilih masuk atau keluar. Untuk modal dari investor pilih Modal masuk dan pilih investornya.", "Jumlah: angka saja, tanpa titik juga boleh.", "Dipegang oleh: nama orang yang memegang uang tunainya.", "Tunai/transfer, bank, dan foto nota: foto opsional. Uang tunai dari investor tidak perlu bukti foto. Untuk belanja di pasar, foto nota membantu kalau ada."] },
   ],
   "/kelola/permintaan": [
     { judul: "Permintaan dana", isi: ["Judul, jalur, jumlah kambing, dan dana yang dibutuhkan: tampil ke investor apa adanya.", "Ditawarkan ke: semua investor (siapa cepat dia dapat) atau hanya investor yang dicentang.", "Tombol WhatsApp membantu mengabari investor. Setelah diambil, klik Catat dana masuk saat uangnya diterima."] },

@@ -51,7 +51,7 @@ export default async function BukuKas({ searchParams }: { searchParams: Promise<
       )}
       <section className="card">
         <h2 className="mb-1">Catat uang masuk / keluar</h2>
-        <p className="muted mb-3 text-xs">Isi siapa yang memegang uangnya (untuk tunai) dan foto nota supaya bisa dicek investor dan pengelola lain.</p>
+        <p className="muted mb-3 text-xs">Isi siapa yang memegang uangnya (untuk tunai). Foto nota opsional, dan uang tunai dari investor tidak perlu bukti foto.</p>
         <form action={tambahKas} className="grid gap-2 sm:grid-cols-3">
           {sp.pid && <input type="hidden" name="permintaan_id" value={sp.pid} />}
           <Field label="Tanggal"><input className="input" type="date" name="tanggal" defaultValue={hariIni()} required /></Field>
