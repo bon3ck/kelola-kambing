@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function masuk(fd: FormData) {
@@ -17,6 +18,7 @@ export async function daftar(fd: FormData) {
   const { data, error } = await supabase.auth.signUp({
     email: String(fd.get("email")),
     password: String(fd.get("password")),
+    options: { emailRedirectTo: `${(await headers()).get("origin") ?? ""}/auth/konfirmasi` },
   });
   if (error) redirect("/login?mode=daftar&pesan=" + encodeURIComponent(error.message));
   if (!data.session)
