@@ -133,7 +133,8 @@ export async function hapus(fd: FormData) {
 export async function tambahInvestor(fd: FormData) {
   const { supabase } = await wajibPengelola();
   const { error } = await supabase.from("investor").insert({
-    nama: str(fd, "nama"), email: str(fd, "email")?.toLowerCase() ?? null, no_wa: str(fd, "no_wa"), rekening: str(fd, "rekening"),
+    nama_panggilan: str(fd, "nama_panggilan"), catatan: str(fd, "catatan"),
+    email: str(fd, "email")?.toLowerCase() ?? null, no_wa: str(fd, "no_wa"), rekening: str(fd, "rekening"),
   });
   if (error) gagal("/kelola/investor", error.code === "23505" ? "Email investor sudah terdaftar." : error.message);
   revalidatePath("/kelola", "layout");
@@ -174,5 +175,13 @@ export async function simpanTarif(fd: FormData) {
   const { supabase } = await wajibAdmin();
   const { error } = await supabase.from("pengaturan").upsert({ kunci: "tarif_kelola_harian", nilai: num(fd, "tarif"), diubah: new Date().toISOString() });
   if (error) gagal("/kelola/biaya", error.message);
+  revalidatePath("/kelola", "layout");
+}
+
+export async function ubahInvestor(fd: FormData) {
+  const { supabase } = await wajibPengelola();
+  const { error } = await supabase.from("investor")
+    .update({ nama_panggilan: str(fd, "nama_panggilan"), catatan: str(fd, "catatan") }).eq("id", num(fd, "id"));
+  if (error) gagal("/kelola/investor", error.message);
   revalidatePath("/kelola", "layout");
 }

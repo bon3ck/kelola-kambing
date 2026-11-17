@@ -1,3 +1,4 @@
+import { isiNama } from "./actions";
 import { redirect } from "next/navigation";
 import { getSesi } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
@@ -9,7 +10,7 @@ export default async function Portal() {
   if (menunggu) redirect("/menunggu");
   const peran = staf ? "pengelola" : "investor";
   const [{ data: inv }, { data: rk }, { data: ri }, { data: timbang }, { data: sehat }] = await Promise.all([
-    supabase.from("investor").select("nama").eq("user_id", user.id).maybeSingle(),
+    supabase.from("investor").select("id,nama").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("ringkasan_kambing"),
     supabase.rpc("ringkasan_investor"),
     supabase.from("timbang").select("kambing_id,tanggal,berat").order("tanggal"),
@@ -26,6 +27,15 @@ export default async function Portal() {
       <Nav peran={peran} email={user.email} />
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-6">
         <h1>Halo{inv?.nama ? `, ${inv.nama}` : ""}</h1>
+        {inv && !inv.nama && (
+          <form action={isiNama} className="card flex flex-wrap items-end gap-2">
+            <div className="grow">
+              <label className="label" htmlFor="nama">Lengkapi nama lengkap Anda supaya pengelola mengenali Anda</label>
+              <input className="input" id="nama" name="nama" required placeholder="Nama sesuai KTP" />
+            </div>
+            <button className="btn">Simpan</button>
+          </form>
+        )}
         {milik.length === 0 ? (
           <p className="card text-sm">Belum ada kambing atas nama Anda. Kalau Anda sudah berinvestasi, minta pengelola mendaftarkan email {user.email}.</p>
         ) : (

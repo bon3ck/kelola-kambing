@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { FotoInput } from "@/components/FotoInput";
 import { wajibPengelola } from "@/lib/auth";
-import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing } from "@/lib/format";
+import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing , labelInvestor } from "@/lib/format";
 import { Field, Foto, Pesan, hariIni } from "@/components/ui";
 import { tambahKambing } from "../actions";
 
@@ -10,7 +10,7 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
   const { supabase } = await wajibPengelola();
   const [{ data }, { data: investor }] = await Promise.all([
     supabase.rpc("ringkasan_kambing"),
-    supabase.from("investor").select("id,nama").order("nama"),
+    supabase.from("investor").select("id,nama,nama_panggilan,email").order("id"),
   ]);
   const { data: foto } = await supabase.from("kambing").select("id,foto_url");
   const fotoOf = new Map((foto ?? []).map((f) => [f.id, f.foto_url as string | null]));
@@ -69,7 +69,7 @@ export default async function DaftarKambing({ searchParams }: { searchParams: Pr
           <Field label="Investor (modal = harga beli)">
             <select className="input" name="investor_id" defaultValue="">
               <option value="">Belum ada / atur nanti</option>
-              {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{i.nama}</option>)}
+              {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{labelInvestor(i)}</option>)}
             </select>
           </Field>
           <div className="sm:col-span-2 lg:col-span-3"><Field label="Ciri-ciri / catatan"><input className="input" name="catatan" placeholder="Putih belang hitam, tanduk pendek" /></Field></div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { FotoInput } from "@/components/FotoInput";
 import { notFound } from "next/navigation";
 import { wajibPengelola } from "@/lib/auth";
-import { rupiah, kg, namaJalur, tgl, type RingkasanKambing } from "@/lib/format";
+import { rupiah, kg, namaJalur, tgl, type RingkasanKambing , labelInvestor, type InvestorLabel } from "@/lib/format";
 import { Field, Pesan, Pertumbuhan, hariIni } from "@/components/ui";
 import {
   ubahKambing, gantiFoto, catatTimbang, catatKesehatan, catatBiaya, catatPenjualan, tambahPemilik, hapus,
@@ -34,8 +34,8 @@ export default async function DetailKambing({ params, searchParams }: {
       supabase.from("kesehatan").select("*").eq("kambing_id", kid).order("tanggal", { ascending: false }),
       supabase.from("biaya").select("*").eq("kambing_id", kid).order("tanggal", { ascending: false }),
       supabase.from("penjualan").select("*").eq("kambing_id", kid).maybeSingle(),
-      supabase.from("kepemilikan").select("id,modal,investor(id,nama)").eq("kambing_id", kid),
-      supabase.from("investor").select("id,nama").order("nama"),
+      supabase.from("kepemilikan").select("id,modal,investor(id,nama,nama_panggilan,email)").eq("kambing_id", kid),
+      supabase.from("investor").select("id,nama,nama_panggilan,email").order("id"),
     ]);
   if (!k) notFound();
   const r = ((ring ?? []) as RingkasanKambing[]).find((x) => x.id === kid)!;
@@ -125,10 +125,10 @@ export default async function DetailKambing({ params, searchParams }: {
             <thead><tr><th>Investor</th><th className="num">Modal</th><th className="num">Porsi</th><th></th></tr></thead>
             <tbody>
               {(pemilik ?? []).map((p) => {
-                const inv = p.investor as unknown as { id: number; nama: string };
+                const inv = p.investor as unknown as InvestorLabel;
                 return (
                   <tr key={p.id}>
-                    <td>{inv?.nama}</td>
+                    <td>{labelInvestor(inv)}</td>
                     <td className="num">{rupiah(p.modal)}</td>
                     <td className="num">{totalModal ? Math.round((Number(p.modal) / totalModal) * 1000) / 10 : 0}%</td>
                     <td className="num"><Hapus tabel="kepemilikan" id={p.id} /></td>
@@ -142,7 +142,7 @@ export default async function DetailKambing({ params, searchParams }: {
           <input type="hidden" name="kambing_id" value={kid} />
           <Field label="Investor">
             <select className="input" name="investor_id" required>
-              {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{i.nama}</option>)}
+              {(investor ?? []).map((i) => <option key={i.id} value={i.id}>{labelInvestor(i)}</option>)}
             </select>
           </Field>
           <Field label="Modal (Rp)"><input className="input" name="modal" inputMode="numeric" required defaultValue={totalModal ? "" : String(k.harga_beli)} /></Field>

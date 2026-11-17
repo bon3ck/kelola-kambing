@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { wajibPengelola } from "@/lib/auth";
-import { rupiah, namaJalur, tgl, type RingkasanInvestor } from "@/lib/format";
+import { rupiah, namaJalur, tgl, type RingkasanInvestor , labelInvestor, type InvestorLabel } from "@/lib/format";
 import { Pesan, hariIni } from "@/components/ui";
 import { catatPembayaran, hapus } from "../actions";
 
@@ -9,7 +9,7 @@ export default async function BagiHasil({ searchParams }: { searchParams: Promis
   const { supabase } = await wajibPengelola();
   const [{ data }, { data: bayar }] = await Promise.all([
     supabase.rpc("ringkasan_investor"),
-    supabase.from("pembayaran").select("*, investor(nama), kambing(kode)").order("tanggal", { ascending: false }),
+    supabase.from("pembayaran").select("*, investor(nama,nama_panggilan,email), kambing(kode)").order("tanggal", { ascending: false }),
   ]);
   const rows = (data ?? []) as RingkasanInvestor[];
   const terjual = rows.filter((r) => r.total_hak !== null);
@@ -59,7 +59,7 @@ export default async function BagiHasil({ searchParams }: { searchParams: Promis
               {(bayar ?? []).map((b) => (
                 <tr key={b.id}>
                   <td>{tgl(b.tanggal)}</td>
-                  <td>{(b.investor as { nama: string } | null)?.nama}</td>
+                  <td>{labelInvestor(b.investor as InvestorLabel | null)}</td>
                   <td>{(b.kambing as { kode: string } | null)?.kode}</td>
                   <td className="num">{rupiah(b.jumlah)}</td>
                   <td className="num"><form action={hapus}><input type="hidden" name="tabel" value="pembayaran" /><input type="hidden" name="id" value={b.id} /><button className="muted text-xs underline">hapus</button></form></td>

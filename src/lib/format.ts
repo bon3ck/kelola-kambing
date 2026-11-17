@@ -27,3 +27,7 @@ export type RingkasanInvestor = {
   modal: number; persen_modal: number; bagian_keuntungan: number | null; total_hak: number | null;
   sudah_dibayar: number; sisa: number | null;
 };
+
+export type InvestorLabel = { nama?: string | null; nama_panggilan?: string | null; email?: string | null };
+export const labelInvestor = (i: InvestorLabel | null | undefined) =>
+  !i ? "-" : i.nama ? (i.nama_panggilan ? `${i.nama} (${i.nama_panggilan})` : i.nama) : (i.nama_panggilan ?? i.email ?? "(tanpa nama)");
