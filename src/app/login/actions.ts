@@ -18,7 +18,10 @@ export async function daftar(fd: FormData) {
   const { data, error } = await supabase.auth.signUp({
     email: String(fd.get("email")),
     password: String(fd.get("password")),
-    options: { emailRedirectTo: `${(await headers()).get("origin") ?? ""}/auth/konfirmasi` },
+    options: {
+      emailRedirectTo: `${(await headers()).get("origin") ?? ""}/auth/konfirmasi`,
+      data: fd.get("pengelola") ? { daftar_sebagai: "pengelola" } : {},
+    },
   });
   if (error) redirect("/login?mode=daftar&pesan=" + encodeURIComponent(error.message));
   if (!data.session)

@@ -20,6 +20,12 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <input className="input" id="password" name="password" type="password" required minLength={6}
             autoComplete={isDaftar ? "new-password" : "current-password"} />
         </div>
+        {isDaftar && (
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="pengelola" className="mt-1" />
+            <span>Saya mendaftar sebagai <b>pengelola</b> <span className="muted">(perlu persetujuan pengelola utama). Investor tidak perlu mencentang ini.</span></span>
+          </label>
+        )}
         <button className="btn w-full">{isDaftar ? "Daftar" : "Masuk"}</button>
       </form>
       <p className="mt-4 text-center text-sm">

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { wajibPengelola } from "@/lib/auth";
+import { wajibAdmin, wajibPengelola } from "@/lib/auth";
 
 const str = (fd: FormData, k: string) => {
   const v = fd.get(k);
@@ -144,4 +144,28 @@ export async function catatPembayaran(fd: FormData) {
     investor_id: num(fd, "investor_id"), kambing_id: num(fd, "kambing_id"),
     tanggal: str(fd, "tanggal"), jumlah: num(fd, "jumlah"), catatan: str(fd, "catatan"),
   }, "/kelola/bagi-hasil");
+}
+
+export async function putuskanPengelola(fd: FormData) {
+  const { supabase } = await wajibAdmin();
+  const user_id = String(fd.get("user_id"));
+  const setuju = fd.get("keputusan") === "setuju";
+  const { error } = await supabase.from("profil")
+    .update(setuju ? { disetujui: true, minta_pengelola: false } : { peran: "investor", disetujui: true, minta_pengelola: false })
+    .eq("user_id", user_id);
+  if (error) gagal("/kelola/pengelola", error.message);
+  revalidatePath("/kelola", "layout");
+}
+
+export async function daftarkanEmailPeran(fd: FormData) {
+  const { supabase, peran } = await wajibAdmin();
+  const email = str(fd, "email")?.toLowerCase();
+  const p = str(fd, "peran");
+  if (!email || !p) return;
+  if (p === "pengelola_utama" && peran !== "developer") gagal("/kelola/pengelola", "Hanya developer yang bisa menambah pengelola utama.");
+  const { error } = await supabase.from("daftar_peran").upsert({ email, peran: p });
+  if (error) gagal("/kelola/pengelola", error.message);
+  // kalau orangnya sudah punya akun, langsung naikkan perannya
+  await supabase.from("profil").update({ peran: p, disetujui: true, minta_pengelola: false }).ilike("email", email);
+  revalidatePath("/kelola", "layout");
 }

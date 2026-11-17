@@ -1,10 +1,13 @@
+import { redirect } from "next/navigation";
 import { getSesi } from "@/lib/auth";
 import { Nav } from "@/components/Nav";
 import { Foto, Stat, Pertumbuhan } from "@/components/ui";
 import { rupiah, kg, namaJalur, namaStatus, tgl, type RingkasanKambing, type RingkasanInvestor } from "@/lib/format";
 
 export default async function Portal() {
-  const { supabase, user, peran } = await getSesi();
+  const { supabase, user, staf, menunggu } = await getSesi();
+  if (menunggu) redirect("/menunggu");
+  const peran = staf ? "pengelola" : "investor";
   const [{ data: inv }, { data: rk }, { data: ri }, { data: timbang }, { data: sehat }] = await Promise.all([
     supabase.from("investor").select("nama").eq("user_id", user.id).maybeSingle(),
     supabase.rpc("ringkasan_kambing"),

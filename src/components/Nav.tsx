@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-export function Nav({ peran, email }: { peran: "pengelola" | "investor"; email?: string }) {
+export function Nav({ peran, email, admin }: { peran: "pengelola" | "investor"; email?: string; admin?: boolean }) {
   const links =
     peran === "pengelola"
       ? [["/kelola", "Ringkasan"], ["/kelola/kambing", "Kambing"], ["/kelola/biaya", "Biaya bersama"],
-         ["/kelola/investor", "Investor"], ["/kelola/bagi-hasil", "Bagi hasil"]]
+         ["/kelola/investor", "Investor"], ["/kelola/bagi-hasil", "Bagi hasil"],
+         ...(admin ? [["/kelola/pengelola", "Pengelola"]] : [])]
       : [["/portal", "Kambing saya"]];
   return (
     <header className="border-b" style={{ borderColor: "var(--line)", background: "var(--card)" }}>
